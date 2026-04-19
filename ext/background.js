@@ -160,8 +160,27 @@ chrome.runtime.onConnect.addListener((port) => {
   port.onDisconnect.addListener(() => { devtoolsPort = null; notifyDevtools(); });
 });
 
-chrome.runtime.onMessage.addListener((msg) => {
+chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   if (!msg || !msg.type) return;
+  if (msg.type === "__status") {
+    sendResponse({
+      connected: !!(ws && ws.readyState === 1),
+      devtools: !!devtoolsPort,
+      pinnedTabId
+    });
+    return;
+  }
+  if (msg.type === "__pin") {
+    pinnedTabId = typeof msg.tabId === "number" ? msg.tabId : null;
+    (async () => {
+      try {
+        if (pinnedTabId === null) await chrome.storage.session.remove("pinnedTabId");
+        else await chrome.storage.session.set({ pinnedTabId });
+      } catch {}
+      sendResponse({ ok: true, pinnedTabId });
+    })();
+    return true;
+  }
   if (msg.type === "docid") {
     const d = msg.data || {};
     const key = `${d.origin}|${d.friendly_name || ""}|${d.doc_id || ""}`;

@@ -28,6 +28,36 @@ The one manual step is loading the unpacked extension:
 bearer token. Put those in your remote process; every request must carry
 `Authorization: Bearer <token>`.
 
+Clicking the extension icon opens a small popup with WS connection status,
+DevTools attach state, the configured relay URL, and buttons to pin/unpin
+the active tab and open Options.
+
+## Running the relay on a remote server
+
+If `./start.sh` runs on a Linux server (e.g. `strix@strix-hunter`) but
+Chrome runs on your laptop, the extension's `ws://localhost:9876/ws`
+won't reach the relay. Forward the port over SSH from your laptop:
+
+```bash
+# on the laptop:
+ssh -N -L 9876:localhost:9876 strix@strix-hunter
+# keep this terminal open; ^C to stop forwarding.
+```
+
+`localhost:9876` on the laptop now tunnels to `:9876` on the server.
+Leave the extension's Relay URL as `ws://localhost:9876/ws`.
+
+To survive disconnects, use autossh:
+
+```bash
+autossh -M 0 -N -o ServerAliveInterval=30 -o ServerAliveCountMax=3 \
+        -L 9876:localhost:9876 strix@strix-hunter
+```
+
+Remote cloudflared is still needed so your remote Claude process can
+reach the HTTP API at `https://*.trycloudflare.com`. The SSH forward is
+only for the local browser ↔ remote relay WebSocket.
+
 ## HTTP API
 
 All endpoints require `Authorization: Bearer <TOKEN>`.

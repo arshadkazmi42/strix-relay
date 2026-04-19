@@ -14,7 +14,7 @@
   }],
   "devtools_page": "devtools.html",
   "options_page": "options.html",
-  "action": { "default_title": "Strix Relay" },
+  "action": { "default_title": "Strix Relay", "default_popup": "popup.html" },
   "icons": { "128": "icon128.png" },
   "web_accessible_resources": [
     { "resources": ["page-script.js"], "matches": ["<all_urls>"] }
