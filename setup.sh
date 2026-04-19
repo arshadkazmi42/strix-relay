@@ -9,6 +9,10 @@ warn() { printf "${Y}[WARN]${N} %s\n" "$1"; }
 OS=$(uname -s); ARCH=$(uname -m)
 case "$OS" in Darwin|Linux) ok "OS: $OS ($ARCH)";; *) fail "unsupported OS: $OS";; esac
 
+if [ "${EUID:-$(id -u)}" = "0" ] && [ -n "${SUDO_USER:-}" ]; then
+  fail "don't run with sudo — the script invokes sudo only where needed (cloudflared install). Re-run as your normal user: ./setup.sh"
+fi
+
 cd "$(dirname "$0")"
 changed=false
 
@@ -18,10 +22,7 @@ if ! command -v bun >/dev/null 2>&1; then
   curl -fsSL https://bun.sh/install | bash
   export BUN_INSTALL="${BUN_INSTALL:-$HOME/.bun}"
   export PATH="$BUN_INSTALL/bin:$PATH"
-  for f in "$HOME/.bashrc" "$HOME/.zshrc" "$HOME/.profile"; do
-    [ -f "$f" ] && . "$f" >/dev/null 2>&1 || true
-  done
-  command -v bun >/dev/null 2>&1 || fail "bun install failed"
+  command -v bun >/dev/null 2>&1 || fail "bun install failed (PATH update did not take effect)"
 fi
 ok "bun $(bun --version)"
 
