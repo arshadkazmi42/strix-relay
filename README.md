@@ -74,12 +74,36 @@ All endpoints require `Authorization: Bearer <TOKEN>`.
 | GET    | `/v1/docids`    | harvested GraphQL doc_ids (`?filter=<substr>`) |
 | GET    | `/v1/ws-frames` | captured WebSocket frames (`?since=<iso>&direction=in\|out\|both&host=<substr>`) |
 | GET    | `/v1/netlog`    | DevTools-captured requests with bodies (requires DevTools open) |
+| GET    | `/v1/audit`     | relay audit log of every API call (`?limit=N&pathContains=str&since=iso`) |
 
 Error codes:
 - `401` bad / missing token
 - `400` no active tab
 - `412` `/v1/netlog` without DevTools attached
 - `503` extension not connected
+
+## Audit log
+
+Every authenticated request the relay receives is appended to `./audit.log`
+(JSONL) and mirrored to an in-memory ring buffer of the last 1000 entries
+exposed as `GET /v1/audit`. Each entry contains the timestamp, method, path,
+remote IP (cf-connecting-ip / x-forwarded-for), status, duration, and both
+request and response bodies truncated to 4 KB.
+
+```bash
+# tail live:
+tail -f audit.log | jq .
+
+# last 20 calls:
+curl -sS -H "Authorization: Bearer $TOKEN" "$URL/v1/audit?limit=20" | jq .
+
+# only /v1/eval calls since a given time:
+curl -sS -H "Authorization: Bearer $TOKEN" \
+  "$URL/v1/audit?pathContains=/v1/eval&since=2026-04-19T00:00:00Z" | jq .
+```
+
+Calls to `/v1/audit` itself are not logged (to avoid feedback). Rotate or
+archive `audit.log` per engagement; it's already in `.gitignore`.
 
 ## Security
 
