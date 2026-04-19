@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3,
+  "name": "Strix Relay",
+  "version": "0.1.0",
+  "description": "Remote-driven browser automation for authorized security testing.",
+  "permissions": ["scripting", "tabs", "webRequest", "storage", "activeTab", "debugger"],
+  "host_permissions": ["<all_urls>"],
+  "background": { "service_worker": "background.js" },
+  "content_scripts": [{
+    "matches": ["<all_urls>"],
+    "js": ["content.js"],
+    "run_at": "document_start",
+    "all_frames": false
+  }],
+  "devtools_page": "devtools.html",
+  "options_page": "options.html",
+  "action": { "default_title": "Strix Relay" },
+  "icons": { "128": "icon128.png" },
+  "web_accessible_resources": [
+    { "resources": ["page-script.js"], "matches": ["<all_urls>"] }
+  ]
+}
